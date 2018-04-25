@@ -1,0 +1,60 @@
+<div id="userInfo">
+    <el-form status-icon label-width="100px" class="demo-ruleForm" :model="form">
+        <el-form-item label="用户名" prop="username">
+            <el-input type="text" auto-complete="off" v-model="form.username"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+            <el-input type="password" auto-complete="off" v-model="form.password"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+            <el-input type="text" v-model="form.email"></el-input>
+        </el-form-item>
+        <el-form-item label="电话" prop="phone">
+            <el-input type="text" v-model="form.phone"></el-input>
+        </el-form-item>
+        <el-form-item label="性别" prop="sex">
+            <el-input type="text" v-model="form.sex"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="add()">提交</el-button>
+            <el-button type="primary">重置</el-button>
+        </el-form-item>
+    </el-form>
+</div>
+<script>
+    var vm = new Vue({
+        el: '#userInfo',
+        data: {
+            form: {
+                username: '',
+                password: '',
+                email: '',
+                phone: '',
+                sex: ''
+            }
+        },
+        methods: {
+            add: function () {
+                var _this = this
+                $.get('/users/add', { data: _this.form }, function (result) {
+                    if (result.error == 0) {
+                        _this.$message({
+                            type: 'success',
+                            message: '添加成功!'
+                        });
+                    }
+                    else {
+                        console.log('添加失败')
+                    }
+                })
+            }
+        }
+    })
+</script>
+
+<style>
+    #userInfo {
+        width: 60%;
+        margin: 20px 0
+    }
+</style>

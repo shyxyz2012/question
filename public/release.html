@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://cdn.bootcss.com/js-cookie/latest/js.cookie.min.js"></script>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        #main {
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        #mainHeader {
+            width: 100%;
+            background: #F2F0F0;
+            text-align: center;
+            font-size: 30px;
+            padding: 30px 0;
+        }
+
+        #mainHeader span {
+            font-weight: bold;
+            font-size: 20px;
+        }
+        h2{
+            text-align: center;
+            padding: 15px 0;
+            font-size: 24px;
+        }
+        .releasefooter{
+            float: right;
+            margin: 10px 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="main">
+        <div id="mainHeader">
+            <img src="/photo/logo.png">
+            <span>随堂问卷</span>
+        </div>
+
+        <h2>{{papers.title}}</h2>
+
+        <el-card v-for="(item,index) in papers.content" :key="'papers_'+index" :header="item.text">
+            <el-radio-group v-model="papers.content[index].answer">
+                <el-radio :label="i.id" v-for="(i,index) in papers.item" :key="'papers_'+index">{{i.text}}</el-radio>
+            </el-radio-group>
+        </el-card>
+
+        <el-card style="margin-bottom:5px;" header="其他建议">
+            <el-input type="textarea" :rows="2" placeholder="其他建议" v-model="papers.note"></el-input>
+        </el-card>
+
+        <div class="releasefooter">
+            <el-button @click="save()" type="primary" size="small">提交</el-button>
+        </div>
+    </div>
+
+    
+</body>
+
+</html>
+<script>
+    var rvm = new Vue({
+        el: '#main',
+        created() {
+            var _this = this,
+            id = this.paperId
+            $.get('/papers/find', { id: id }, function (result) {
+                if (result.error != 0) { return }
+                _this.papers.title=result.data.title
+                _this.papers.content=JSON.parse(result.data.content)
+            })
+
+        },
+        data: {
+            paperId:Cookies.getJSON('release_paper_id'),
+            papers: {
+                title: '',
+                note:'',
+                content: [],
+                item: [
+                    { id: '1', text: '优', val: 5 },
+                    { id: '2', text: '良', val: 4 },
+                    { id: '3', text: '好', val: 3 },
+                    { id: '4', text: '差', val: 2 },
+                    { id: '5', text: '很差', val: 1 },
+                ]
+            }
+        },
+        methods: {
+            save(){
+                var _this = this,arr=[]
+                for(i in _this.papers.content){
+                    arr.push(_this.papers.content[i].answer)
+                }
+                if(arr.indexOf(undefined)!=-1){
+                    _this.$message({
+                        type:'error',
+                        message:'未完全评价，请评价完整'
+                    })
+                    return
+                }
+                else{
+                    $.post('/papers/release/add',{
+                    title:'',
+                    paper_id:_this.paperId,
+                    content:JSON.stringify(_this.papers.content),
+                    item:JSON.stringify(_this.papers.item),
+                    note:_this.papers.note,
+                    title:_this.papers.title,
+                    cuid:Cookies.getJSON('releaseInfo'+_this.paperId).cuid
+                },function(result){
+                    location.reload()
+                })
+            } 
+            }
+        }
+    })
+</script>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://cdn.bootcss.com/js-cookie/latest/js.cookie.min.js"></script>
+    <script src="//unpkg.com/echarts/dist/echarts.min.js"></script>
+    <script src="//unpkg.com/v-charts/lib/index.min.js"></script>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        #main {
+            width: 100%;
+            margin: 0 auto;
+            
+        }
+
+        #mainHeader {
+            width: 100%;
+            background: #F2F0F0;
+            text-align: center;
+            font-size: 30px;
+            padding: 30px 0;
+        }
+
+        #mainContain {
+            overflow: hidden;
+        }
+
+        #mainContain>div {
+            float: left;
+        }
+
+        .containLeft {
+            width: 20%;
+        }
+
+        .containRight {
+            width: 80%;
+        }
+        .containRight .guanli{
+            font-size: 30px;
+            font-family: '微软雅黑';
+            color: red;
+            padding: 20px 0px 0 200px;
+            animation: sd 2s linear infinite;
+            letter-spacing: 0.5em
+        }
+        @keyframes sd {
+            0% { opacity: 1; }
+            50% { opacity: 1; }
+            50.01% { opacity: 0; }
+            100% { opacity: 0; }
+        }
+        #mainFooter{
+            width: 100%;
+            padding: 15px;
+            background: #F2F0F0;
+            text-align: center;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="main">
+        <div id="mainHeader">
+            <img src="/photo/logo.png">问卷管理系统
+        </div>
+        <div id="mainContain">
+            <div class="containLeft">
+                <el-menu default-active="2" class="el-menu-vertical-demo" @select="loadPage">
+                    <el-menu-item index="/menu/users.html">
+                        <i class="el-icon-setting"></i>
+                        <span slot="title">用户管理</span>
+                    </el-menu-item>
+                    <el-menu-item index="/add/addUser.html">
+                        <i class="el-icon-menu"></i>
+                        <span slot="title">添加用户</span>
+                    </el-menu-item>
+                    <el-menu-item index="/menu/outline.html">
+                        <i class="el-icon-news"></i>
+                        <span slot="title">大纲管理</span>
+                    </el-menu-item>
+                    <el-menu-item index="/menu/papers.html">
+                        <i class="el-icon-document"></i>
+                        <span slot="title">问卷管理</span>
+                    </el-menu-item>
+                    <el-menu-item index="/menu/myself.html">
+                        <i class="el-icon-printer"></i>
+                        <span slot="title">个人中心</span>
+                    </el-menu-item>
+                </el-menu>
+            </div>
+            <div class="containRight">
+                <div class="guanli">欢迎来到后台管理界面</div>
+            </div>
+        </div>
+        <div id="mainFooter">
+            <p><small>地址：南京市秦淮区弓箭坊</small></p>
+            <p><small>电话：0250-6789098 &copy; 版权所有，盗版必究</small></p>
+        </div>
+    </div>
+</body>
+
+</html>
+<script>
+ var indexVm = new Vue({
+        el: '.containLeft',
+        data: {},
+        methods: {
+            loadPage(index) {
+                $.get(index, function (result) {
+                    $(".containRight").html(result)
+                })
+            }
+        }
+    })
+</script>

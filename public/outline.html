@@ -1,0 +1,199 @@
+<div id="outline">
+    <!-- 添加节点按钮 -->
+    <div class="miniBtn">
+        <el-button size="mini" type="success" plain @click.stop="addOut(data)">
+            <i class="el-icon-circle-plus-outline"></i>添加节点
+        </el-button>
+    </div>
+    
+
+    <!-- default-expand-all(默认情况下将所有的子标题都显示) -->
+    <el-tree :data="data" :props="defaultProps" draggable @node-drop="drop">
+        <!-- 自定义节点内容 -->
+        <span slot-scope="{ node, data }" @mouseover="data.flag=true" @mouseout="data.flag=false">
+            {{data.text}}
+            <span v-show="data.flag">
+                <el-button type="primary" plain size="mini" @click.stop="addOutline(data)">
+                    <i class="el-icon-circle-plus-outline"></i>添加子节点</el-button>
+                <el-button type="primary" plain size="mini" @click.stop="editOutline(data)">
+                    <i class="el-icon-edit"></i>编辑</el-button>
+                <!-- 当父节点含有子节点时，父节点没有删除按钮，只有当子节点为0时父节点才有删除按钮 -->
+                <el-button v-show="data.children.length==0" type="primary" plain size="mini" @click.stop="delOutline(node,data)">
+                    <i class="el-icon-delete"></i>删除</el-button>
+            </span>
+        </span>
+    </el-tree>
+</div>
+
+<script>
+    new Vue({
+        el: '#outline',
+        data: function () {
+            return {
+                data: [],
+                defaultProps: {
+                    children: 'children',
+                    label: 'text'
+                }
+            }
+        },
+        created: function () {
+            var _this = this
+            $.get('/getoutline', function (result) {
+                if (result.error != 0) { return }
+                _this.data = result.data
+            })
+        },
+        methods: {
+            // 拖拽排序事件
+            drop: function (node1, node2, pos) {
+                console.log(node1)
+                console.log(node2)
+                console.log(pos)
+
+                var id = node1.data.id
+                // pid
+
+                if (pos == 'before') {
+                    if (node2.previousSibling.previousSibling) {
+                        var prenode = node2.previousSibling.previousSibling
+                        presort = prenode.data.sort
+                    } else {
+                        presort = node2.data.sort - 0.01
+                    }
+
+                    $.post('/outline/sort', {
+                        id: id,
+                        pid: node2.data.pid,
+                        sort: (presort + node2.data.sort) / 2,
+                    }, function (result) {
+                        if (result.error != 0) return
+
+                    })
+                } else if (pos == 'after') {
+                    if (node2.nextviousSibling.nextviousSibling) {
+                        var nextnode = node2.nextviousSibling.nextviousSibling
+                        nextsort = nextnode.data.sort
+                    } else {
+                        nextsort = node2.data.sort + 0.1
+                    }
+
+                    $.post('/outline/sort', {
+                        id: id,
+                        pid: node2.data.pid,
+                        sort: (nextsort + node2.data.sort) / 2,
+                    }, function (result) {
+                        if (result.error != 0) return
+                    })
+                } else {
+                    $.post('/outline/sort', {
+                        id: id,
+                        pid: node2.data.id,
+                        sort: 0
+                    }, function (result) {
+                        if (result.error != 0) return
+                    })
+                }
+            },
+
+            // 给当前节点添加子节点
+            addOutline: function (data) {
+                this.$prompt('请输入内容', '添加子节点', {
+                    inputPattern: /^.+$/,//任意内容重复
+                    inputErrorMessage: '输入内容不能为空',
+                    callback: function (action, obj) {
+                        if (action != 'confirm') { return }
+
+                        $.post('/outline/add', {
+                            text: obj.inputValue,
+                            pid: data.id,
+                            // sort: 0
+                        }, function (result) {
+                            if (result.error != 0) { return }
+                            data.children.push({
+                                text: obj.inputValue,
+                                children: [],
+                                flag: false,
+                                id: result.id
+                            })
+                        })
+                    }
+                })
+            },
+            addOut: function (data) {
+                this.$prompt('请输入内容', '添加子节点', {
+                    inputPattern: /^.+$/,//任意内容重复
+                    inputErrorMessage: '输入内容不能为空',
+                    callback: function (action, obj) {
+                        if (action != 'confirm') { return }
+
+                        $.post('/outline/add', {
+                            text: obj.inputValue,
+                            pid: 0,
+                            // sort: 0
+                        }, function (result) {
+                            if (result.error != 0) { return }
+                            data.push({
+                                text: obj.inputValue,
+                                children: [],
+                                pid: 0,
+                                flag: false,
+                                id: result.id
+                            })
+                        })
+                    }
+                })
+            },
+
+            // 删除当前节点
+            delOutline: function (node, data) {
+                this.$confirm('删除后将不能恢复', '删除', {
+                    callback: function (action) {
+                        if (action == 'confirm') {
+                            $.get('/outline/del', { id: data.id }, function (result) {
+                                if (result.error != 0) { return }
+
+                                var parent = node.parent;
+                                children = parent.data.children || parent.data;//既可以删除父节点也可以删除子节点，否则只能删除子节点
+                                // 获取要删除节点的索引index
+                                var index = children.findIndex(function (value) {
+                                    return value.id = data.id
+                                })
+                                children.splice(index, 1)
+                            })
+                        }
+                    }
+                })
+            },
+
+            // 编辑当前节点
+            editOutline: function (data) {
+                var _this = this
+                this.$prompt('请编辑当前内容', '编辑', {
+                    inputPattern: /^.+$/,
+                    inputErrorMessage: '输入内容不能为空',
+                    // 获取要编辑的内容
+                    inputValue: data.text,
+                    callback: function (action, obj) {
+                        if (action != 'confirm') { return }
+                        $.post('/outline/edit', {
+                            id: data.id,
+                            text: obj.inputValue
+                        }, function (result) {
+                            if (result.error != 0) { return }
+                            _this.$set(data, 'text', obj.inputValue)
+                        })
+                    }
+                })
+            }
+        }
+    })
+</script>
+
+<style>
+    .miniBtn{
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #eeeeee;
+    }
+</style>
